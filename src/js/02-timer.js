@@ -2,9 +2,14 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
 const btnEl = document.querySelector('button[data-start]');
+const daysEl = document.querySelector('[data-days]');
+const hoursEl = document.querySelector('[data-hours]');
+const minutesEl = document.querySelector('[data-minutes]');
+const secondsEl = document.querySelector('[data-seconds]');
 
 let selectedDate = null;
 btnEl.disabled = true;
+
 const options = {
   enableTime: true,
   time_24hr: true,
@@ -21,14 +26,30 @@ const options = {
   },
 };
 
-function addLeadingZero(value) {
-  return String(value).padStart(2, '0');
+btnEl.addEventListener('click', start);
+
+function start() {
+  const btnClick = setInterval(() => {
+    const ms = selectedDate.getTime() - Date.now();
+    if (ms <= 0) {
+      clearInterval(btnClick);
+      return;
+    }
+    const time = convertMs(ms);
+    addLeadingZero(time);
+  }, 1000);
 }
 
-const daysEl = document.querySelector('[data-days]');
-const hoursEl = document.querySelector('[data-hours]');
-const minutesEl = document.querySelector('[data-minutes]');
-const secondsEl = document.querySelector('[data-seconds]');
+function addLeadingZero({ days, hours, minutes, seconds }) {
+  daysEl.innerHTML = padStart(days);
+  hoursEl.innerHTML = padStart(hours);
+  minutesEl.innerHTML = padStart(minutes);
+  secondsEl.innerHTML = padStart(seconds);
+}
+
+function padStart(value) {
+  return String(value).padStart(2, '0');
+}
 
 function convertMs(ms) {
   // Number of milliseconds per unit of time
@@ -46,23 +67,8 @@ function convertMs(ms) {
   const minutes = Math.floor(((ms % day) % hour) / minute);
   // Remaining seconds
   const seconds = Math.floor((((ms % day) % hour) % minute) / second);
-  daysEl.textContent = addLeadingZero(days);
-  hoursEl.textContent = addLeadingZero(hours);
-  minutesEl.textContent = addLeadingZero(minutes);
-  secondsEl.textContent = addLeadingZero(seconds);
 
   return { days, hours, minutes, seconds };
-}
-
-btnEl.addEventListener('click', start);
-
-function start() {
-  const refreshIntervalId = setInterval(() => {
-    if (selectedDate > Date.now()) {
-      return convertMs(selectedDate - Date.now());
-    }
-    clearInterval(refreshIntervalId);
-  }, 1000);
 }
 
 flatpickr('input#datetime-picker', options);
